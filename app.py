@@ -83,10 +83,10 @@ if st.button('Generate Image'):
         except Exception as e:
             st.error(f"Error generating image: {e}")
 
-# if st.button('Generate Video'):
-#     if user_input:
-#         video_result = generate_video(user_input)
-#         st.video(video_result)  # Display the generated video
+if st.button('Generate Video'):
+    if user_input:
+        video_result = generate_video(user_input)
+        st.video(video_result)  # Display the generated video
 
 # Display chat history
 for i, message in enumerate(st.session_state['chat_history']):
