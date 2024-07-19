@@ -1,4 +1,0 @@
-apikey="sk-None-uBCSOkvRayNd9e4EyAp1T3BlbkFJAdVETpX6sDiNEhzNlCrR"
-apikey1="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"
-groqcloud_apikey="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"
-stability_ai_apikey='sk-vBvcCtLmBwfjnTuQRv2JZFqt7TSTvp5bKxWv216m6n8F8I5r'
