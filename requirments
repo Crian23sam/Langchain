@@ -2,3 +2,5 @@ streamlit
 requests
 groq
 langchain
+base64
+os
