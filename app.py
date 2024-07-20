@@ -2,15 +2,16 @@ import os
 import base64
 import requests
 import streamlit as st
+#from apikey import groqcloud_apikey, stability_ai_apikey
 from groq import Groq
 from langchain.memory import ConversationBufferMemory
 
 # Set your API keys
-groqcloud_apikey = st.secrets["GROQ_API_KEY"]
-stability_ai_apikey = st.secrets["STABILITY_AI_API_KEY"]
+GROQ_API_KEY = "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"
+STABILITY_AI_API_KEY = "sk-M2z8OBnk94qnu6cRALXInGU8bPHcKeCPEF5ufkTbVsSSwgha"
 
 # Initialize Groq Client
-client = Groq(api_key=groqcloud_apikey)
+client = Groq(api_key=GROQ_API_KEY)
 
 # Streamlit App Framework
 st.title('💬 Chat with SmartBot')
@@ -33,9 +34,10 @@ def get_chatbot_response(user_message, chat_history):
 
 # Function to generate image using Stability AI
 def generate_image(prompt):
+    stability_ai_api_key = STABILITY_AI_API_KEY
     url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
     headers = {
-        "authorization": f"Bearer {stability_ai_apikey}",
+        "authorization": f"Bearer {stability_ai_api_key}",
         "accept": "image/*"
     }
     data = {
