@@ -14,7 +14,7 @@ os.environ['STABILITY_AI_API_KEY'] = stability_ai_apikey
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Streamlit App Framework
-st.title('💬 SmartBot')
+st.title('💬 Chat with SmartBot')
 
 # Memory for conversation history
 conversation_memory = ConversationBufferMemory(memory_key='chat_history', input_key='input', output_key='output')
@@ -50,11 +50,6 @@ def generate_image(prompt):
     else:
         raise Exception(str(response.json()))
 
-# Function to generate video using Stability AI (if available)
-def generate_video(prompt):
-    # Placeholder function: Replace with actual Stability AI video generation API call if available
-    return f"Video generation not supported yet for prompt: {prompt}"
-
 # Input form for user to type messages
 with st.form(key='input_form'):
     user_input = st.text_input('You:', key='input_field')
@@ -73,7 +68,7 @@ if submit_button:
         chat_history.append({"role": "assistant", "content": bot_response})
         st.session_state['chat_history'] = chat_history
 
-# Buttons to generate image and generate video
+# Button to generate image
 if st.button('Generate Image'):
     if user_input:
         try:
@@ -83,14 +78,9 @@ if st.button('Generate Image'):
         except Exception as e:
             st.error(f"Error generating image: {e}")
 
-if st.button('Generate Video'):
-    if user_input:
-        video_result = generate_video(user_input)
-        st.video(video_result)  # Display the generated video
-
 # Display chat history
 for i, message in enumerate(st.session_state['chat_history']):
     if message['role'] == 'user':
         st.text_area('You:', value=message['content'], height=50, max_chars=None, key=f"user_{i}")
     else:
-        st.text_area('GroqBot:', value=message['content'], height=50, max_chars=None, key=f"bot_{i}")
+        st.text_area('SmartBot:', value=message['content'], height=50, max_chars=None, key=f"bot_{i}")
