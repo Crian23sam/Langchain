@@ -2,7 +2,7 @@ import os
 import base64
 import requests
 import streamlit as st
-from apikey import groqcloud_apikey, stability_ai_apikey
+#from apikey import groqcloud_apikey, stability_ai_apikey
 from groq import Groq
 from langchain.memory import ConversationBufferMemory
 
