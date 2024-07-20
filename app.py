@@ -7,8 +7,8 @@ from groq import Groq
 from langchain.memory import ConversationBufferMemory
 
 # Set your API keys
-os.environ['GROQ_API_KEY'] = groqcloud_apikey
-os.environ['STABILITY_AI_API_KEY'] = stability_ai_apikey
+GROQ_API_KEY = "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"
+STABILITY_AI_API_KEY = "sk-M2z8OBnk94qnu6cRALXInGU8bPHcKeCPEF5ufkTbVsSSwgha"
 
 # Initialize Groq Client
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -34,7 +34,7 @@ def get_chatbot_response(user_message, chat_history):
 
 # Function to generate image using Stability AI
 def generate_image(prompt):
-    stability_ai_api_key = os.environ.get('STABILITY_AI_API_KEY')
+    stability_ai_api_key = os.environ.get(STABILITY_AI_API_KEY)
     url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
     headers = {
         "authorization": f"Bearer {stability_ai_api_key}",
