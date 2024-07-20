@@ -1,6 +1,4 @@
-streamlit
-requests
-groq
-langchain
-base64
-os
+streamlit==1.20.0
+requests==2.28.2
+groq==0.1.0
+langchain==0.0.1
