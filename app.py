@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import streamlit as st
 from googleapiclient.discovery import build
 from groq import Groq
@@ -7,7 +8,13 @@ from textblob import TextBlob
 from gtts import gTTS
 from io import BytesIO
 from datetime import date
-from apikey import groqcloud_apikey, youtube_api_key
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Retrieve API keys from environment variables
+groqcloud_apikey = os.getenv('GROQCLOUD_API_KEY')
+youtube_api_key = os.getenv('YOUTUBE_API_KEY')
 
 os.environ['GROQ_API_KEY'] = groqcloud_apikey
 
