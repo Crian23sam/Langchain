@@ -1,0 +1,6 @@
+google_api_python_client==2.137.0
+groq==0.9.0
+gTTS==2.5.2
+langchain==0.2.11
+streamlit==1.36.0
+textblob==0.18.0.post0
