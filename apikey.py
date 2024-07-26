@@ -1,5 +1,2 @@
-apikey="sk-None-uBCSOkvRayNd9e4EyAp1T3BlbkFJAdVETpX6sDiNEhzNlCrR"
-apikey1="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"
 groqcloud_apikey="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"
-stability_ai_apikey='sk-vLLfvEDLJ1NthkSm6ZHw4A7kNyqfYVriQB5VMUdtMOX6qR68'
 youtube_api_key="AIzaSyAzBwnasCSnJQjOwWr5OJkURMHPp-P9eFE"
