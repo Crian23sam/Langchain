@@ -4,36 +4,35 @@ import streamlit as st
 from googleapiclient.discovery import build
 from groq import Groq
 from langchain.memory import ConversationBufferMemory
-from textblob import TextBlob
+#from textblob import TextBlob
 from gtts import gTTS
 from io import BytesIO
 from datetime import date
+#import random
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Retrieve API keys from environment variables
 groqcloud_apikey = os.getenv('GROQCLOUD_API_KEY')
 youtube_api_key = os.getenv('YOUTUBE_API_KEY')
 
 os.environ['GROQ_API_KEY'] = groqcloud_apikey
 
-# Initialize Groq Client
-try:
-    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-    # Attempt to make a simple request to check if the API key is valid
-    _ = client.chat.completions.create(
-        messages=[{"role": "system", "content": "hello"}],
-        model="llama3-8b-8192",
-    )
-except Exception as e:
-    st.error(f"Failed to initialize Groq client: {e}")
-    st.stop()
+def init_groq_client():
+    try:
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        _ = client.chat.completions.create(
+            messages=[{"role": "system", "content": "hello"}],
+            model="llama3-8b-8192",
+        )
+        return client
+    except Exception as e:
+        st.error(f"Failed to initialize Groq client: {e}")
+        st.stop()
 
-# Initialize YouTube API Client
+client = init_groq_client()
+
 youtube = build('youtube', 'v3', developerKey=youtube_api_key)
 
-# Streamlit App Framework
 st.set_page_config(
     page_title="Martial Arts & Self-Defense",
     page_icon="🥋",
@@ -41,63 +40,62 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+st.markdown(
+    """
+    <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .background-video-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .background-video-container video {
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+    }
+
+    .main {
+      position: relative;
+      z-index: 1;
+    }
+    </style>
+    <div class="background-video-container">
+        <video autoplay muted loop>
+            <source src="https://videos.pexels.com/video-files/4761806/4761806-uhd_2732_1440_25fps.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title('🥋 Martial Arts & Self-Defense')
 
-# Sidebar Configuration
-st.sidebar.title("Settings")
-theme = st.sidebar.radio("Choose Theme", ["Light", "Dark", "Colorful"])
-if theme == "Dark":
-    st.markdown(
-        """
-        <style>
-        .reportview-container {
-            background: #333;
-            color: white;
-        }
-        .sidebar .sidebar-content {
-            background: #444;
-            color: white;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-elif theme == "Colorful":
-    st.markdown(
-        """
-        <style>
-        .reportview-container {
-            background: linear-gradient(135deg, #ffcc00, #ff6666);
-            color: #000;
-        }
-        .sidebar .sidebar-content {
-            background: #ffeebb;
-            color: #000;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# Welcome Message
 st.write("Welcome to the Martial Arts & Self-Defense App! Type your questions below to learn about techniques, tips, and exercises.")
 
-# Memory for conversation history
 conversation_memory = ConversationBufferMemory(memory_key='chat_history', input_key='input', output_key='output')
 
-# Initialize chat history in session state
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 
-# Function to reset chat history
 def reset_chat():
     st.session_state['chat_history'] = []
 
-# Add a button to start a new chat
 if st.sidebar.button('Start New Chat'):
     reset_chat()
 
-# Define function to get chatbot response
 def get_chatbot_response(user_message, chat_history):
     try:
         messages = chat_history + [{"role": "user", "content": user_message}]
@@ -110,25 +108,24 @@ def get_chatbot_response(user_message, chat_history):
         st.error(f"Error getting response from SmartBot: {e}")
         return "Sorry, I am having trouble understanding you right now."
 
-# Function for Text-to-Speech
+
 def text_to_speech(text):
     tts = gTTS(text=text, lang='en')
     mp3_fp = BytesIO()
     tts.write_to_fp(mp3_fp)
     return mp3_fp
 
-# Basic Emotion Analysis using TextBlob
-def analyze_emotion(text):
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    if polarity > 0.1:
-        return "Positive"
-    elif polarity < -0.1:
-        return "Negative"
-    else:
-        return "Neutral"
 
-# Function to get martial arts video from YouTube
+# def analyze_emotion(text):
+#     blob = TextBlob(text)
+#     polarity = blob.sentiment.polarity
+#     if polarity > 0.1:
+#         return "Positive"
+#     elif polarity < -0.1:
+#         return "Negative"
+#     else:
+#         return "Neutral"
+
 def get_martial_arts_video(topic):
     try:
         request = youtube.search().list(
@@ -145,25 +142,6 @@ def get_martial_arts_video(topic):
         st.error(f"Error fetching video from YouTube: {e}")
         return "https://www.youtube.com/results?search_query=martial+arts"
 
-# Function for quiz
-def martial_arts_quiz():
-    questions = {
-        "What part of the body is used in a front kick?": ["Shin", "Knee", "Ball of the foot", "Heel"],
-        "Which martial art is known for its ground fighting techniques?": ["Karate", "Taekwondo", "Brazilian Jiu-Jitsu", "Kung Fu"],
-        "What is the primary focus of Taekwondo?": ["Punching", "Kicking", "Grappling", "Blocking"]
-    }
-    answers = ["Ball of the foot", "Brazilian Jiu-Jitsu", "Kicking"]
-
-    score = 0
-    for i, (question, options) in enumerate(questions.items()):
-        st.write(question)
-        answer = st.radio("", options, key=f"q{i}")
-        if answer == answers[i]:
-            score += 1
-
-    st.write(f"Your score: {score}/{len(questions)}")
-
-# Daily Goal Setter
 def daily_goal_setter():
     today = date.today()
     if 'daily_goals' not in st.session_state or st.session_state['goal_date'] != today:
@@ -187,41 +165,80 @@ def daily_goal_setter():
         if goal['completed']:
             st.write(f"✅ {goal['goal']}")
 
-# Input form for user to type messages
+def training_tracker():
+    st.sidebar.title("Training Tracker")
+    st.sidebar.write("Log your training sessions and progress.")
+
+    if 'training_log' not in st.session_state:
+        st.session_state['training_log'] = []
+
+    session_date = st.sidebar.date_input("Session Date")
+    training_activity = st.sidebar.text_input("Training Activity")
+    training_duration = st.sidebar.number_input("Duration (minutes)", min_value=0, step=1)
+    training_notes = st.sidebar.text_area("Notes")
+
+    if st.sidebar.button("Add Training Session"):
+        st.session_state['training_log'].append({
+            "date": session_date,
+            "activity": training_activity,
+            "duration": training_duration,
+            "notes": training_notes
+        })
+        st.sidebar.success("Training session added!")
+
+    st.sidebar.write("### Training Log")
+    for entry in st.session_state['training_log']:
+        st.sidebar.write(f"- **{entry['date']}**: {entry['activity']} for {entry['duration']} minutes")
+        if entry['notes']:
+            st.sidebar.write(f"  - Notes: {entry['notes']}")
+
+def meditation_and_breathing():
+    st.sidebar.title("Meditation & Breathing")
+    st.sidebar.write("Calm your mind with these exercises.")
+
+    breathing_exercises = [
+        "4-7-8 Breathing: Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds.",
+        "Box Breathing: Inhale for 4 seconds, hold for 4 seconds, exhale for 4 seconds, hold for 4 seconds.",
+        "Diaphragmatic Breathing: Focus on breathing deeply into your diaphragm."
+    ]
+
+    meditation_tips = [
+        "Find a quiet place, sit comfortably, and close your eyes.",
+        "Focus on your breath and try to clear your mind.",
+        "Start with 5 minutes a day and gradually increase the time."
+    ]
+
+    selected_exercise = st.sidebar.selectbox("Choose an exercise", breathing_exercises)
+    st.sidebar.write(selected_exercise)
+
+    st.sidebar.write("### Meditation Tips")
+    for tip in meditation_tips:
+        st.sidebar.write(f"- {tip}")
+
 with st.form(key='input_form'):
     user_input = st.text_input('You:', key='input_field')
     submit_button = st.form_submit_button(label='Send')
 
 if submit_button:
     if user_input:
-        # Get the chat history from session state
         chat_history = st.session_state['chat_history']
-
-        # Get the chatbot response
         bot_response = get_chatbot_response(user_input, chat_history)
+        # emotion = analyze_emotion(user_input)
+        # st.write(f"**Detected Emotion:** {emotion}")
 
-        # Get the emotion analysis
-        emotion = analyze_emotion(user_input)
-        st.write(f"**Detected Emotion:** {emotion}")
-
-        # Update the chat history
         chat_history.append({"role": "user", "content": user_input})
         chat_history.append({"role": "assistant", "content": bot_response})
         st.session_state['chat_history'] = chat_history
 
-        # Display the conversation
         st.write(f"**You:** {user_input}")
         st.write(f"**SmartBot:** {bot_response}")
 
-        # Convert bot response to speech
         audio = text_to_speech(bot_response)
         st.audio(audio, format='audio/mp3')
 
-        # Display relevant video based on user input
         video_url = get_martial_arts_video(user_input)
         st.video(video_url)
 
-# Display chat history in a collapsible dropdown list
 with st.expander("Chat History", expanded=False):
     st.write("### Conversation")
     for i, message in enumerate(st.session_state['chat_history']):
@@ -230,29 +247,39 @@ with st.expander("Chat History", expanded=False):
         else:
             st.write(f"**SmartBot:** {message['content']}")
 
-# Add a footer
 st.write("---")
+
 st.write("© 2024 Martial Arts & Self-Defense. All rights reserved.")
 
-# Section for daily tips and exercises
 st.sidebar.title("Daily Tip")
 daily_tip = st.sidebar.radio(
     "Choose an area to focus on",
     ("General Tips", "Technique of the Day", "Self-Defense Scenario")
 )
 
+def play_audio_tip(tip):
+    tts = gTTS(text=tip, lang='en')
+    audio_fp = BytesIO()
+    tts.write_to_fp(audio_fp)
+    st.sidebar.audio(audio_fp, format='audio/mp3')
+
 if daily_tip == "General Tips":
-    st.sidebar.write("Stay consistent with your training, warm up properly before exercises, and cool down afterward to prevent injuries.")
+    tip = "Stay consistent with your training, warm up properly before exercises, and cool down afterward to prevent injuries."
+    st.sidebar.write(tip)
+    play_audio_tip(tip)
+
 elif daily_tip == "Technique of the Day":
-    st.sidebar.write("Today's Technique: Front Kick - Start with your feet shoulder-width apart. Lift your knee to your chest and snap your foot forward, striking with the ball of your foot.")
+    tip = "Today's Technique: Front Kick - Start with your feet shoulder-width apart. Lift your knee to your chest and snap your foot forward, striking with the ball of your foot."
+    st.sidebar.write(tip)
+    play_audio_tip(tip)
+
 elif daily_tip == "Self-Defense Scenario":
-    st.sidebar.write("Scenario: Someone grabs your wrist. React by twisting your wrist towards the attacker's thumb and pull your hand back quickly to break free.")
+    tip = "Scenario: Someone grabs your wrist. React by twisting your wrist towards the attacker's thumb and pull your hand back quickly to break free."
+    st.sidebar.write(tip)
+    play_audio_tip(tip)
 
-# Quiz section
-st.sidebar.title("Martial Arts Quiz")
-if st.sidebar.button("Start Quiz"):
-    martial_arts_quiz()
-
-# Daily Goal Setter section
 st.sidebar.title("Daily Goal Setter")
 daily_goal_setter()
+
+training_tracker()
+meditation_and_breathing()
