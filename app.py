@@ -34,7 +34,7 @@ client = init_groq_client()
 youtube = build('youtube', 'v3', developerKey=youtube_api_key)
 
 st.set_page_config(
-    page_title="Martial Arts & Self-Defense",
+    page_title="ZenFight AI",
     page_icon="🥋",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -81,7 +81,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title('🥋 Martial Arts & Self-Defense')
+st.title('🥋 ZenFight AI')
 
 st.write("Welcome to the Martial Arts & Self-Defense App! Type your questions below to learn about techniques, tips, and exercises.")
 
@@ -231,7 +231,7 @@ if submit_button:
         st.session_state['chat_history'] = chat_history
 
         st.write(f"**You:** {user_input}")
-        st.write(f"**SmartBot:** {bot_response}")
+        st.write(f"**ZenFight AI:** {bot_response}")
 
         audio = text_to_speech(bot_response)
         st.audio(audio, format='audio/mp3')
@@ -245,11 +245,8 @@ with st.expander("Chat History", expanded=False):
         if message['role'] == 'user':
             st.write(f"**You:** {message['content']}")
         else:
-            st.write(f"**SmartBot:** {message['content']}")
+            st.write(f"**ZenFight AI:** {message['content']}")
 
-st.write("---")
-
-st.write("© 2024 Martial Arts & Self-Defense. All rights reserved.")
 
 st.sidebar.title("Daily Tip")
 daily_tip = st.sidebar.radio(
@@ -280,6 +277,11 @@ elif daily_tip == "Self-Defense Scenario":
 
 st.sidebar.title("Daily Goal Setter")
 daily_goal_setter()
+
+st.write("---")
+
+st.write("© 2024 Martial Arts & Self-Defense. All rights reserved.")
+
 
 training_tracker()
 meditation_and_breathing()
