@@ -4,11 +4,9 @@ import streamlit as st
 from googleapiclient.discovery import build
 from groq import Groq
 from langchain.memory import ConversationBufferMemory
-#from textblob import TextBlob
 from gtts import gTTS
 from io import BytesIO
 from datetime import date
-#import random
 
 load_dotenv()
 
@@ -108,23 +106,11 @@ def get_chatbot_response(user_message, chat_history):
         st.error(f"Error getting response from SmartBot: {e}")
         return "Sorry, I am having trouble understanding you right now."
 
-
 def text_to_speech(text):
     tts = gTTS(text=text, lang='en')
     mp3_fp = BytesIO()
     tts.write_to_fp(mp3_fp)
     return mp3_fp
-
-
-# def analyze_emotion(text):
-#     blob = TextBlob(text)
-#     polarity = blob.sentiment.polarity
-#     if polarity > 0.1:
-#         return "Positive"
-#     elif polarity < -0.1:
-#         return "Negative"
-#     else:
-#         return "Neutral"
 
 def get_martial_arts_video(topic):
     try:
@@ -151,7 +137,10 @@ def daily_goal_setter():
     st.write("## Set Your Daily Training Goals")
     goal_input = st.text_input("Enter a new goal")
     if st.button("Add Goal"):
-        st.session_state['daily_goals'].append({"goal": goal_input, "completed": False})
+        if goal_input.strip() == "":
+            st.error("Goal cannot be empty. Please enter a valid goal.")
+        else:
+            st.session_state['daily_goals'].append({"goal": goal_input, "completed": False})
     
     st.write("### Your Goals for Today")
     for idx, goal in enumerate(st.session_state['daily_goals']):
@@ -178,13 +167,18 @@ def training_tracker():
     training_notes = st.sidebar.text_area("Notes")
 
     if st.sidebar.button("Add Training Session"):
-        st.session_state['training_log'].append({
-            "date": session_date,
-            "activity": training_activity,
-            "duration": training_duration,
-            "notes": training_notes
-        })
-        st.sidebar.success("Training session added!")
+        if not training_activity.strip():
+            st.sidebar.error("Training activity cannot be empty. Please enter a valid activity.")
+        elif training_duration <= 0:
+            st.sidebar.error("Training duration must be greater than 0.")
+        else:
+            st.session_state['training_log'].append({
+                "date": session_date,
+                "activity": training_activity,
+                "duration": training_duration,
+                "notes": training_notes
+            })
+            st.sidebar.success("Training session added!")
 
     st.sidebar.write("### Training Log")
     for entry in st.session_state['training_log']:
@@ -215,6 +209,113 @@ def meditation_and_breathing():
     for tip in meditation_tips:
         st.sidebar.write(f"- {tip}")
 
+def personalized_training_plans():
+    st.sidebar.title("Personalized Training Plans")
+    st.sidebar.write("Create and follow a personalized training plan based on your goals.")
+
+    if 'training_plans' not in st.session_state:
+        st.session_state['training_plans'] = []
+
+    goal = st.sidebar.selectbox(
+        "Select your main goal",
+        ("Lose Weight", "Build Muscle", "Self-Defense", "Fitness", "Learning a Specific Martial Art")
+    )
+
+    plan_name = st.sidebar.text_input("Plan Name")
+    plan_duration = st.sidebar.number_input("Plan Duration (weeks)", min_value=1, step=1)
+    plan_notes = st.sidebar.text_area("Plan Notes")
+
+    if st.sidebar.button("Create Training Plan"):
+        if not plan_name.strip():
+            st.sidebar.error("Plan name cannot be empty. Please enter a valid name.")
+        else:
+            exercises = []
+            tips = []
+
+            if goal == "Lose Weight":
+                exercises = [
+                    "Cardio: 30 minutes of running or cycling",
+                    "High-Intensity Interval Training (HIIT): 20 minutes",
+                    "Strength Training: 30 minutes of full-body workout"
+                ]
+                tips = [
+                    "Maintain a calorie deficit diet.",
+                    "Stay hydrated.",
+                    "Get enough sleep to aid recovery."
+                ]
+
+            elif goal == "Build Muscle":
+                exercises = [
+                    "Strength Training: 45 minutes of weight lifting focusing on different muscle groups",
+                    "Protein Intake: Ensure adequate protein intake before and after workouts",
+                    "Compound Exercises: Include squats, deadlifts, and bench presses"
+                ]
+                tips = [
+                    "Consume a high-protein diet.",
+                    "Increase your calorie intake to support muscle growth.",
+                    "Allow adequate rest for muscle recovery."
+                ]
+
+            elif goal == "Self-Defense":
+                exercises = [
+                    "Martial Arts Drills: 30 minutes",
+                    "Strength and Conditioning: 30 minutes",
+                    "Practice Self-Defense Techniques: 30 minutes"
+                ]
+                tips = [
+                    "Practice regularly to improve your techniques.",
+                    "Focus on speed and agility.",
+                    "Stay aware of your surroundings."
+                ]
+
+            elif goal == "Fitness":
+                exercises = [
+                    "Cardio: 30 minutes of running, cycling, or swimming",
+                    "Strength Training: 30 minutes of full-body workout",
+                    "Flexibility: 20 minutes of stretching or yoga"
+                ]
+                tips = [
+                    "Stay consistent with your workouts.",
+                    "Mix different types of exercises to avoid monotony.",
+                    "Listen to your body to avoid overtraining."
+                ]
+
+            elif goal == "Learning a Specific Martial Art":
+                exercises = [
+                    "Technique Practice: 45 minutes of practicing specific martial arts techniques",
+                    "Conditioning: 30 minutes of strength and endurance training",
+                    "Sparring: 30 minutes (if possible)"
+                ]
+                tips = [
+                    "Focus on mastering the basics.",
+                    "Practice regularly to build muscle memory.",
+                    "Learn from a qualified instructor."
+                ]
+
+            plan = {
+                "goal": goal,
+                "name": plan_name,
+                "duration": plan_duration,
+                "notes": plan_notes,
+                "exercises": exercises,
+                "tips": tips
+            }
+            st.session_state['training_plans'].append(plan)
+            st.sidebar.success("Training plan created!")
+
+    st.sidebar.write("### Your Training Plans")
+    for plan in st.session_state['training_plans']:
+        st.sidebar.write(f"- **{plan['name']}** ({plan['duration']} weeks)")
+        st.sidebar.write(f"  - Goal: {plan['goal']}")
+        if plan['notes']:
+            st.sidebar.write(f"  - Notes: {plan['notes']}")
+        st.sidebar.write("  - Exercises:")
+        for exercise in plan['exercises']:
+            st.sidebar.write(f"    - {exercise}")
+        st.sidebar.write("  - Tips:")
+        for tip in plan['tips']:
+            st.sidebar.write(f"    - {tip}")
+
 with st.form(key='input_form'):
     user_input = st.text_input('You:', key='input_field')
     submit_button = st.form_submit_button(label='Send')
@@ -223,8 +324,6 @@ if submit_button:
     if user_input:
         chat_history = st.session_state['chat_history']
         bot_response = get_chatbot_response(user_input, chat_history)
-        # emotion = analyze_emotion(user_input)
-        # st.write(f"**Detected Emotion:** {emotion}")
 
         chat_history.append({"role": "user", "content": user_input})
         chat_history.append({"role": "assistant", "content": bot_response})
@@ -246,7 +345,6 @@ with st.expander("Chat History", expanded=False):
             st.write(f"**You:** {message['content']}")
         else:
             st.write(f"**ZenFight AI:** {message['content']}")
-
 
 st.sidebar.title("Daily Tip")
 daily_tip = st.sidebar.radio(
@@ -282,6 +380,6 @@ st.write("---")
 
 st.write("© 2024 Martial Arts & Self-Defense. All rights reserved.")
 
-
 training_tracker()
 meditation_and_breathing()
+personalized_training_plans()
