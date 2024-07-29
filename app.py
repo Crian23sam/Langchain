@@ -202,7 +202,7 @@ MARTIAL_ARTS_KEYWORDS = [
     "famous dojos", "historic martial arts sites", 
     "traditional martial arts practices", "martial arts rituals",
     "martial arts ceremonies", "dojo opening ceremony", 
-    "belt promotion ceremony", "martial arts anniversaries"
+    "belt promotion ceremony", "martial arts anniversaries","self defence"
 ]
 
 def is_martial_arts_related(input_text):
