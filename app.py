@@ -10,6 +10,7 @@ from io import BytesIO
 from datetime import date
 from PIL import Image
 import requests
+from streamlit_option_menu import option_menu
 
 load_dotenv()
 
@@ -117,7 +118,6 @@ button[data-baseweb="button"]:hover {
 </style>
 """, unsafe_allow_html=True)
 
-
 MARTIAL_ARTS_KEYWORDS = [
     "martial arts", "karate", "judo", "taekwondo", "kickboxing", "kung fu", 
     "jiu jitsu", "self-defense", "grappling", "sparring", "muay thai", 
@@ -141,21 +141,6 @@ def fetch_image(url):
     except Exception as e:
         st.error(f"Error fetching image: {e}")
         return None
-
-st.title('🥋 ZenFight AI')
-
-st.write("Welcome to the Martial Arts & Self-Defense App! Type your questions below to learn about techniques, tips, and exercises.")
-
-conversation_memory = ConversationBufferMemory(memory_key='chat_history', input_key='input', output_key='output')
-
-if 'chat_history' not in st.session_state:
-    st.session_state['chat_history'] = []
-
-def reset_chat():
-    st.session_state['chat_history'] = []
-
-if st.sidebar.button('Start New Chat'):
-    reset_chat()
 
 def get_chatbot_response(user_message, chat_history):
     if is_martial_arts_related(user_message):
@@ -193,6 +178,9 @@ def get_martial_arts_video(topic):
     except Exception as e:
         st.error(f"Error fetching video from YouTube: {e}")
         return "https://www.youtube.com/results?search_query=martial+arts"
+
+def reset_chat():
+    st.session_state['chat_history'] = []
 
 def daily_goal_setter():
     today = date.today()
@@ -252,28 +240,52 @@ def training_tracker():
         if entry['notes']:
             st.sidebar.write(f"  - Notes: {entry['notes']}")
 
-with st.form(key='chat_form'):
-    user_input = st.text_input('You: ', 'Tell me about martial arts.')
-    submit_button = st.form_submit_button(label='Send')
-
-if submit_button and user_input:
-    chatbot_response = get_chatbot_response(user_input, st.session_state['chat_history'])
-    st.session_state['chat_history'].append({"role": "user", "content": user_input})
-    st.session_state['chat_history'].append({"role": "assistant", "content": chatbot_response})
-    st.markdown(f"**You:** {user_input}")
-    st.markdown(f"**ZenFight AI:** {chatbot_response}")
+def main():
+    st.title('🥋 ZenFight AI')
+    st.write("Welcome to the Martial Arts & Self-Defense App! Type your questions below to learn about techniques, tips, and exercises.")
     
-    mp3_fp = text_to_speech(chatbot_response)
-    st.audio(mp3_fp, format="audio/mp3")
+    st.sidebar.button('Start New Chat', on_click=reset_chat)
 
-    video_url = get_martial_arts_video(user_input)
-    st.video(video_url)
+    conversation_memory = ConversationBufferMemory(memory_key='chat_history', input_key='input', output_key='output')
 
-daily_goal_setter()
-training_tracker()
+    if 'chat_history' not in st.session_state:
+        st.session_state['chat_history'] = []
 
-image_url = 'https://c4.wallpaperflare.com/wallpaper/628/39/680/1920x1080-px-meditation-monk-selective-coloring-video-games-age-of-conan-hd-art-wallpaper-preview.jpg'
-image = fetch_image(image_url)
-if image:
-    st.image(image, caption='Martial Arts Background')
+    with st.form(key='chat_form'):
+        user_input = st.text_input('You: ')
+        submit_button = st.form_submit_button(label='Send')
 
+    if submit_button and user_input:
+        chatbot_response = get_chatbot_response(user_input, st.session_state['chat_history'])
+        st.session_state['chat_history'].append({"role": "user", "content": user_input})
+        st.session_state['chat_history'].append({"role": "assistant", "content": chatbot_response})
+        st.markdown(f"**You:** {user_input}")
+        st.markdown(f"**ZenFight AI:** {chatbot_response}")
+        
+        mp3_fp = text_to_speech(chatbot_response)
+        st.audio(mp3_fp, format="audio/mp3")
+
+        video_url = get_martial_arts_video(user_input)
+        st.video(video_url)
+
+    # image_url = 'https://c4.wallpaperflare.com/wallpaper/628/39/680/1920x1080-px-meditation-monk-selective-coloring-video-games-age-of-conan-hd-art-wallpaper-preview.jpg'
+    # image = fetch_image(image_url)
+    # if image:
+    #     st.image(image, caption='Martial Arts Background')
+
+if __name__ == "__main__":
+    selected = option_menu(
+        "ZenFight AI",
+        ["Main", "Daily Goals", "Training Tracker"],
+        icons=["house", "list-check", "calendar-check"],
+        menu_icon="app-indicator",
+        default_index=0,
+        orientation="horizontal",
+    )
+
+    if selected == "Main":
+        main()
+    elif selected == "Daily Goals":
+        daily_goal_setter()
+    elif selected == "Training Tracker":
+        training_tracker()
