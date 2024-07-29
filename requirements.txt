@@ -6,3 +6,4 @@ Pillow==10.4.0
 python-dotenv==1.0.1
 Requests==2.32.3
 streamlit==1.36.0
+streamlit_option_menu==0.3.13
