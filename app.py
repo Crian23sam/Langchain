@@ -5,8 +5,11 @@ from googleapiclient.discovery import build
 from groq import Groq
 from langchain.memory import ConversationBufferMemory
 from gtts import gTTS
+import base64
 from io import BytesIO
 from datetime import date
+from PIL import Image
+import requests
 
 load_dotenv()
 
@@ -38,46 +41,106 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown(
-    """
-    <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
+# CSS to style the page with a background image and remove unwanted backgrounds
+background_image_css = """
+<style>
+    .stApp {
+        background-image: url('https://c4.wallpaperflare.com/wallpaper/628/39/680/1920x1080-px-meditation-monk-selective-coloring-video-games-age-of-conan-hd-art-wallpaper-preview.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    
+    /* Remove white background and borders around main content */
+    .block-container {
+        background: rgba(0, 0, 0, 0);  /* Transparent background */
+        box-shadow: none;              /* Remove shadow */
+    }
+    
+    /* Customize Streamlit header */
+    header {
+        background: rgba(0, 0, 0, 0);  /* Semi-transparent background */
+        padding: 10px;
+        border-radius: 10px;
+    }
+    
+    /* Style text input box */
+    .stTextInput > div:first-child {
+        background-color: rgba(0, 0, 0, 0.6); /* More transparent background */
+        border-radius: 10px;
+        padding: 10px;
+    }
+    
+    /* Style the text and button within forms */
+    .stButton > button {
+        background-color: #7B1818;  /* Button background color */
+        color: black;               /* Button text color */
+        border-radius: 10px;
     }
 
-    .background-video-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: -1;
+    .stTextInput > div input {
+        color: white; /* Text color */
     }
+    
+    /* Customize the sidebar */
+    .sidebar .sidebar-content {
+        background: rgba(0, 0, 0, 0.8); /* More opaque for readability */
+        padding: 20px;
+        border-radius: 10px;
+    }
+    
+    /* General text styling for readability */
+    .stMarkdown {
+        background: rgba(0, 0, 0, 0.5);
+        color: white; /* Text color */
+        padding: 10px;
+        border-radius: 10px;
+    }
+</style>
+"""
 
-    .background-video-container video {
-      min-width: 100%;
-      min-height: 100%;
-      object-fit: cover;
-    }
+# Inject CSS into the Streamlit app
+st.markdown(background_image_css, unsafe_allow_html=True)
 
-    .main {
-      position: relative;
-      z-index: 1;
-    }
-    </style>
-    <div class="background-video-container">
-        <video autoplay muted loop>
-            <source src="https://videos.pexels.com/video-files/4761806/4761806-uhd_2732_1440_25fps.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<style>
+button[data-baseweb="button"] {
+    background-color: red;
+    color: white;
+    border: 1px solid red;
+}
+button[data-baseweb="button"]:hover {
+    background-color: darkred;
+    border: 1px solid darkred;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+MARTIAL_ARTS_KEYWORDS = [
+    "martial arts", "karate", "judo", "taekwondo", "kickboxing", "kung fu", 
+    "jiu jitsu", "self-defense", "grappling", "sparring", "muay thai", 
+    "wrestling", "boxing", "dojo", "kata", "martial arts techniques", 
+    "martial arts exercises", "martial arts training", "martial arts tips",
+    "fit","build"
+]
+
+def is_martial_arts_related(input_text):
+    input_text = input_text.lower()  # Convert input to lowercase
+    for keyword in MARTIAL_ARTS_KEYWORDS:
+        if keyword in input_text:
+            return True
+    return False
+
+def fetch_image(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except Exception as e:
+        st.error(f"Error fetching image: {e}")
+        return None
 
 st.title('🥋 ZenFight AI')
 
@@ -95,16 +158,19 @@ if st.sidebar.button('Start New Chat'):
     reset_chat()
 
 def get_chatbot_response(user_message, chat_history):
-    try:
-        messages = chat_history + [{"role": "user", "content": user_message}]
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model="llama3-8b-8192",
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        st.error(f"Error getting response from SmartBot: {e}")
-        return "Sorry, I am having trouble understanding you right now."
+    if is_martial_arts_related(user_message):
+        try:
+            messages = chat_history + [{"role": "user", "content": user_message}]
+            chat_completion = client.chat.completions.create(
+                messages=messages,
+                model="llama3-8b-8192",
+            )
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            st.error(f"Error getting response from SmartBot: {e}")
+            return "Sorry, I am having trouble understanding you right now."
+    else:
+        return "Sorry, please ask something related to martial arts."
 
 def text_to_speech(text):
     tts = gTTS(text=text, lang='en')
@@ -186,200 +252,28 @@ def training_tracker():
         if entry['notes']:
             st.sidebar.write(f"  - Notes: {entry['notes']}")
 
-def meditation_and_breathing():
-    st.sidebar.title("Meditation & Breathing")
-    st.sidebar.write("Calm your mind with these exercises.")
-
-    breathing_exercises = [
-        "4-7-8 Breathing: Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds.",
-        "Box Breathing: Inhale for 4 seconds, hold for 4 seconds, exhale for 4 seconds, hold for 4 seconds.",
-        "Diaphragmatic Breathing: Focus on breathing deeply into your diaphragm."
-    ]
-
-    meditation_tips = [
-        "Find a quiet place, sit comfortably, and close your eyes.",
-        "Focus on your breath and try to clear your mind.",
-        "Start with 5 minutes a day and gradually increase the time."
-    ]
-
-    selected_exercise = st.sidebar.selectbox("Choose an exercise", breathing_exercises)
-    st.sidebar.write(selected_exercise)
-
-    st.sidebar.write("### Meditation Tips")
-    for tip in meditation_tips:
-        st.sidebar.write(f"- {tip}")
-
-def personalized_training_plans():
-    st.sidebar.title("Personalized Training Plans")
-    st.sidebar.write("Create and follow a personalized training plan based on your goals.")
-
-    if 'training_plans' not in st.session_state:
-        st.session_state['training_plans'] = []
-
-    goal = st.sidebar.selectbox(
-        "Select your main goal",
-        ("Lose Weight", "Build Muscle", "Self-Defense", "Fitness", "Learning a Specific Martial Art")
-    )
-
-    plan_name = st.sidebar.text_input("Plan Name")
-    plan_duration = st.sidebar.number_input("Plan Duration (weeks)", min_value=1, step=1)
-    plan_notes = st.sidebar.text_area("Plan Notes")
-
-    if st.sidebar.button("Create Training Plan"):
-        if not plan_name.strip():
-            st.sidebar.error("Plan name cannot be empty. Please enter a valid name.")
-        else:
-            exercises = []
-            tips = []
-
-            if goal == "Lose Weight":
-                exercises = [
-                    "Cardio: 30 minutes of running or cycling",
-                    "High-Intensity Interval Training (HIIT): 20 minutes",
-                    "Strength Training: 30 minutes of full-body workout"
-                ]
-                tips = [
-                    "Maintain a calorie deficit diet.",
-                    "Stay hydrated.",
-                    "Get enough sleep to aid recovery."
-                ]
-
-            elif goal == "Build Muscle":
-                exercises = [
-                    "Strength Training: 45 minutes of weight lifting focusing on different muscle groups",
-                    "Protein Intake: Ensure adequate protein intake before and after workouts",
-                    "Compound Exercises: Include squats, deadlifts, and bench presses"
-                ]
-                tips = [
-                    "Consume a high-protein diet.",
-                    "Increase your calorie intake to support muscle growth.",
-                    "Allow adequate rest for muscle recovery."
-                ]
-
-            elif goal == "Self-Defense":
-                exercises = [
-                    "Martial Arts Drills: 30 minutes",
-                    "Strength and Conditioning: 30 minutes",
-                    "Practice Self-Defense Techniques: 30 minutes"
-                ]
-                tips = [
-                    "Practice regularly to improve your techniques.",
-                    "Focus on speed and agility.",
-                    "Stay aware of your surroundings."
-                ]
-
-            elif goal == "Fitness":
-                exercises = [
-                    "Cardio: 30 minutes of running, cycling, or swimming",
-                    "Strength Training: 30 minutes of full-body workout",
-                    "Flexibility: 20 minutes of stretching or yoga"
-                ]
-                tips = [
-                    "Stay consistent with your workouts.",
-                    "Mix different types of exercises to avoid monotony.",
-                    "Listen to your body to avoid overtraining."
-                ]
-
-            elif goal == "Learning a Specific Martial Art":
-                exercises = [
-                    "Technique Practice: 45 minutes of practicing specific martial arts techniques",
-                    "Conditioning: 30 minutes of strength and endurance training",
-                    "Sparring: 30 minutes (if possible)"
-                ]
-                tips = [
-                    "Focus on mastering the basics.",
-                    "Practice regularly to build muscle memory.",
-                    "Learn from a qualified instructor."
-                ]
-
-            plan = {
-                "goal": goal,
-                "name": plan_name,
-                "duration": plan_duration,
-                "notes": plan_notes,
-                "exercises": exercises,
-                "tips": tips
-            }
-            st.session_state['training_plans'].append(plan)
-            st.sidebar.success("Training plan created!")
-
-    st.sidebar.write("### Your Training Plans")
-    for plan in st.session_state['training_plans']:
-        st.sidebar.write(f"- **{plan['name']}** ({plan['duration']} weeks)")
-        st.sidebar.write(f"  - Goal: {plan['goal']}")
-        if plan['notes']:
-            st.sidebar.write(f"  - Notes: {plan['notes']}")
-        st.sidebar.write("  - Exercises:")
-        for exercise in plan['exercises']:
-            st.sidebar.write(f"    - {exercise}")
-        st.sidebar.write("  - Tips:")
-        for tip in plan['tips']:
-            st.sidebar.write(f"    - {tip}")
-
-with st.form(key='input_form'):
-    user_input = st.text_input('You:', key='input_field')
+with st.form(key='chat_form'):
+    user_input = st.text_input('You: ', 'Tell me about martial arts.')
     submit_button = st.form_submit_button(label='Send')
 
-if submit_button:
-    if user_input:
-        chat_history = st.session_state['chat_history']
-        bot_response = get_chatbot_response(user_input, chat_history)
+if submit_button and user_input:
+    chatbot_response = get_chatbot_response(user_input, st.session_state['chat_history'])
+    st.session_state['chat_history'].append({"role": "user", "content": user_input})
+    st.session_state['chat_history'].append({"role": "assistant", "content": chatbot_response})
+    st.markdown(f"**You:** {user_input}")
+    st.markdown(f"**ZenFight AI:** {chatbot_response}")
+    
+    mp3_fp = text_to_speech(chatbot_response)
+    st.audio(mp3_fp, format="audio/mp3")
 
-        chat_history.append({"role": "user", "content": user_input})
-        chat_history.append({"role": "assistant", "content": bot_response})
-        st.session_state['chat_history'] = chat_history
+    video_url = get_martial_arts_video(user_input)
+    st.video(video_url)
 
-        st.write(f"**You:** {user_input}")
-        st.write(f"**ZenFight AI:** {bot_response}")
-
-        audio = text_to_speech(bot_response)
-        st.audio(audio, format='audio/mp3')
-
-        video_url = get_martial_arts_video(user_input)
-        st.video(video_url)
-
-with st.expander("Chat History", expanded=False):
-    st.write("### Conversation")
-    for i, message in enumerate(st.session_state['chat_history']):
-        if message['role'] == 'user':
-            st.write(f"**You:** {message['content']}")
-        else:
-            st.write(f"**ZenFight AI:** {message['content']}")
-
-st.sidebar.title("Daily Tip")
-daily_tip = st.sidebar.radio(
-    "Choose an area to focus on",
-    ("General Tips", "Technique of the Day", "Self-Defense Scenario")
-)
-
-def play_audio_tip(tip):
-    tts = gTTS(text=tip, lang='en')
-    audio_fp = BytesIO()
-    tts.write_to_fp(audio_fp)
-    st.sidebar.audio(audio_fp, format='audio/mp3')
-
-if daily_tip == "General Tips":
-    tip = "Stay consistent with your training, warm up properly before exercises, and cool down afterward to prevent injuries."
-    st.sidebar.write(tip)
-    play_audio_tip(tip)
-
-elif daily_tip == "Technique of the Day":
-    tip = "Today's Technique: Front Kick - Start with your feet shoulder-width apart. Lift your knee to your chest and snap your foot forward, striking with the ball of your foot."
-    st.sidebar.write(tip)
-    play_audio_tip(tip)
-
-elif daily_tip == "Self-Defense Scenario":
-    tip = "Scenario: Someone grabs your wrist. React by twisting your wrist towards the attacker's thumb and pull your hand back quickly to break free."
-    st.sidebar.write(tip)
-    play_audio_tip(tip)
-
-st.sidebar.title("Daily Goal Setter")
 daily_goal_setter()
-
-st.write("---")
-
-st.write("© 2024 Martial Arts & Self-Defense. All rights reserved.")
-
 training_tracker()
-meditation_and_breathing()
-personalized_training_plans()
+
+image_url = 'https://c4.wallpaperflare.com/wallpaper/628/39/680/1920x1080-px-meditation-monk-selective-coloring-video-games-age-of-conan-hd-art-wallpaper-preview.jpg'
+image = fetch_image(image_url)
+if image:
+    st.image(image, caption='Martial Arts Background')
+
