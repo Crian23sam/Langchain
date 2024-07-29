@@ -122,7 +122,7 @@ MARTIAL_ARTS_KEYWORDS = [
     "martial arts", "karate", "judo", "taekwondo", "kickboxing", "kung fu", 
     "jiu jitsu", "self-defense", "grappling", "sparring", "muay thai", 
     "wrestling", "boxing", "dojo", "kata", "martial arts techniques", 
-    "martial arts exercises", "martial arts training", "martial arts tips",
+    "martial arts exercises", "martial arts training", "martial arts tips","fight",
     "fit","build"
 ]
 
