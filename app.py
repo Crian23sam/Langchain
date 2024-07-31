@@ -76,7 +76,7 @@ background_image_css = """
     /* Style the text and button within forms */
     .stButton > button {
         background-color: #7B1818;  /* Button background color */
-        color: black;               /* Button text color */
+        color: white;               /* Button text color */
         border-radius: 10px;
     }
 
