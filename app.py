@@ -61,7 +61,7 @@ background_image_css = """
     
     /* Customize Streamlit header */
     header {
-        background: rgba(0, 0, 0, 0);  /* Semi-transparent background */
+        background: rgba(0, 0, 0, 1);  /* Semi-transparent background */
         padding: 10px;
         border-radius: 10px;
     }
