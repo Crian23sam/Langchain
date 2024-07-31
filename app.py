@@ -81,7 +81,7 @@ background_image_css = """
     }
 
     .stTextInput > div input {
-        color: white; /* Text color */
+        color: red; /* Text color */
     }
     
     /* Customize the sidebar */
